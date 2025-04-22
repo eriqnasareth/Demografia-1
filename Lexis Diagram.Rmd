@@ -14,8 +14,40 @@ pacman::p_load("tidyverse", "readxl", "LexisPlotR")
 Carregando tabelas do SIM e do SINASC
 
 ```{r}
-read.csv("Data/SIM_2000-2023_RS.csv")
-read.csv("Data/sinasc_2000-2023_RS.csv")
-read_csv("Data/SIM_2000-2023_RS.csv")
+death <- read.csv("Data/SIM_2000-2023_RS.csv", sep = ";")
+birth <- read.csv("Data/sinasc_2000-2023_RS.csv", sep = ";")
+
 ```
+
+selecionando somente as colunas e linhas que serão utilizadas
+
+```{r}
+birth <- birth %>%
+  select(Ano.do.nascimento, Total)
+
+death <- death %>%
+  select(Ano.do.Obito, Total)
+
+death <- death[1:24, ]
+```
+
+
+
+```{r}
+lexis <- lexis_grid(year_start = 2000, year_end = 2023, age_start = 0, age_end = 5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  
+
+polygons <- data.frame(group = c(1, 1, 1, 2, 2, 2),
+                       x = c("1901-01-01", "1902-01-01", "1902-01-01", "1903-01-01", "1904-01-01", "1904-01-01"),
+                       y = c(1, 1, 2, 1, 1, 2))
+
+lexis_year(lg = lexis, year = 2003)
+
+?geom_polygon()
+```
+
+
+
+
 
