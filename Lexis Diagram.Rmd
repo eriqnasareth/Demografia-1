@@ -1,0 +1,21 @@
+---
+title: "Lexis Diagram - Project 1 Demography UnB"
+author: "Erick Nasareth"
+date: "2025-04-22"
+output: pdf_document
+---
+
+Pacotes necessários
+```{r waning=F}
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load("tidyverse", "readxl", "LexisPlotR")
+```
+
+Carregando tabelas do SIM e do SINASC
+
+```{r}
+read.csv("Data/SIM_2000-2023_RS.csv")
+read.csv("Data/sinasc_2000-2023_RS.csv")
+read_csv("Data/SIM_2000-2023_RS.csv")
+```
+
