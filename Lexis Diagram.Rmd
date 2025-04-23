@@ -5,21 +5,21 @@ date: "2025-04-22"
 output: pdf_document
 ---
 
-Pacotes necessários
+# Pacotes necessários
+
 ```{r waning=F}
 if(!require(pacman)) install.packages("pacman")
-pacman::p_load("tidyverse", "readxl", "LexisPlotR")
+pacman::p_load("tidyverse", "readxl", "LexisPlotR", "stringr", "ggthemes")
 ```
 
-Carregando tabelas do SIM e do SINASC
+# Carregando tabelas do SIM e do SINASC
 
 ```{r}
 death <- read.csv("Data/SIM_2000-2023_RS.csv", sep = ";")
 birth <- read.csv("Data/sinasc_2000-2023_RS.csv", sep = ";")
-
 ```
 
-selecionando somente as colunas e linhas que serão utilizadas
+# Selecionando somente as colunas e linhas que serão utilizadas de cada banco
 
 ```{r}
 birth <- birth %>%
@@ -32,20 +32,75 @@ death <- death[1:24, ]
 ```
 
 
+# Criando os grupos delimitando os limites
+
 
 ```{r}
-lexis <- lexis_grid(year_start = 2000, year_end = 2023, age_start = 0, age_end = 5) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+# transforma em character a coluna dos anos que estavam em numeric, depois adiciona o resto da data para então transformar em formato de datas
+
+grupo <- seq(as.Date("2000-01-01"), by = "year", length.out = 25)
+
+gruporep <- rep(grupo, each = 4)
+xaxis <- gruporep[3:(length(gruporep)-2)]
+
+gruporep <- rep(2000:2023, each=4)
+
   
-
-polygons <- data.frame(group = c(1, 1, 1, 2, 2, 2),
-                       x = c("1901-01-01", "1902-01-01", "1902-01-01", "1903-01-01", "1904-01-01", "1904-01-01"),
-                       y = c(1, 1, 2, 1, 1, 2))
-
-lexis_year(lg = lexis, year = 2003)
-
-?geom_polygon()
+  
 ```
+
+
+##########
+
+```{r}
+polygons <- data.frame(group = gruporep,
+                       x= xaxis,
+                       y= rep(c(0, 5, 5, 0), nrow(birth)) 
+                             )
+
+
+  
+```
+
+
+```{r}
+
+lexis_grid(year_start = 2000, year_end = 2024, age_start = 0, age_end = 5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_polygon(aes(      # Polígonos para 1 a 4 anos     
+    x     = polygons$x,
+    y     = polygons$y,
+    group = polygons$group,
+    fill  = polygons$group
+  ),
+  alpha= 0.3) +
+  annotate(
+    "text",
+    x     = seq(as.Date("2000-07-01"), by = "year", length.out = 24),
+    y     = 3,
+    label = death$Total, # Respostas da questão
+    size  = 5,
+    angle = 90,
+    color = "red"
+  )  +
+  annotate(              # Anotações nos gráficos
+    "text",
+    x     = seq(as.Date("2000-07-01"), by = "year", length.out = 24),
+    y     = 1,
+    angle = 0,
+    label = birth$Total,     # Respostas da questão
+    size  = 2
+  ) 
+
+?annotate
+
+```
+
+
+
+
+
+
 
 
 
