@@ -36,26 +36,55 @@ death <- death[1:24, ]
 
 
 ```{r}
-# transforma em character a coluna dos anos que estavam em numeric, depois adiciona o resto da data para então transformar em formato de datas
 
-grupo <- seq(as.Date("2000-01-01"), by = "year", length.out = 25)
+intervalos <- rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 5)
+intervalos <- intervalos[1:(length(intervalos) - 1)]
 
-gruporep <- rep(grupo, each = 4)
-xaxis <- gruporep[3:(length(gruporep)-2)]
+birth[,"Intervalos"] <- intervalos
+death[,"Intervalos"] <- intervalos
 
-gruporep <- rep(2000:2023, each=4)
 
-  
-  
 ```
 
 
-##########
+```{r}
+Nascidos <- birth %>%
+  select(Total, Intervalos) %>%
+  group_by(Intervalos) %>%
+  summarise(Nascidos = sum(Total))
+
+Obitos <- death %>%
+  select(Total, Intervalos) %>%
+  group_by(Intervalos) %>%
+  summarise(Obitos = sum(Total))
+
+```
+
+
+
+# Criando Poligonos
+
+## Delimitando os limites da coordenada x
 
 ```{r}
-polygons <- data.frame(group = gruporep,
-                       x= xaxis,
-                       y= rep(c(0, 5, 5, 0), nrow(birth)) 
+
+coordenadas <- rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 4)
+coordenadas <- coordenadas[3:length(coordenadas)]
+coordenadas <- c(coordenadas, c(rep(as.Date("2024-01-01"), each = 2)))
+
+grupo = rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 4)
+coordx = coordenadas
+coordy = rep(c(0, 5, 5, 0), length(unique(grupo)))
+
+
+```
+
+
+
+```{r}
+polygons <- data.frame(group = grupo,
+                       x= coordx,
+                       y= coordy
                              )
 
 
@@ -65,7 +94,7 @@ polygons <- data.frame(group = gruporep,
 
 ```{r}
 
-lexis_grid(year_start = 2000, year_end = 2024, age_start = 0, age_end = 5) +
+lexis_grid(year_start = 2000, year_end = 2025, age_start = 0, age_end = 10, delta = 5) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   geom_polygon(aes(      # Polígonos para 1 a 4 anos     
     x     = polygons$x,
@@ -76,23 +105,21 @@ lexis_grid(year_start = 2000, year_end = 2024, age_start = 0, age_end = 5) +
   alpha= 0.3) +
   annotate(
     "text",
-    x     = seq(as.Date("2000-07-01"), by = "year", length.out = 24),
+    x     = seq(from = as.Date("2003-01-01"), to = as.Date("2025-01-01"), by = "5 year"),
     y     = 3,
-    label = death$Total, # Respostas da questão
+    label = Obitos$Obitos, # Respostas da questão
     size  = 5,
-    angle = 90,
     color = "red"
-  )  +
+  )   +
   annotate(              # Anotações nos gráficos
     "text",
-    x     = seq(as.Date("2000-07-01"), by = "year", length.out = 24),
-    y     = 1,
-    angle = 0,
-    label = birth$Total,     # Respostas da questão
-    size  = 2
+    x     = seq(from = as.Date("2002-06-01"), to = as.Date("2025-01-01"), by = "5 year"),
+    y     = 0.5,
+    label = Nascidos$Nascidos,     # Respostas da questão
+    size  = 5
   ) 
 
-?annotate
+
 
 ```
 
