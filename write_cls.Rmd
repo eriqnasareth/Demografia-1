@@ -57,9 +57,8 @@ Nascimentos <- dados_nascimentos %>%
 
 ```{r}
 
-writexl::write_xlsx(Obitos, "Data/Obitos_micro_2000-2022_RS.xlsx")
-writexl::write_xlsx(Nascimentos, "Data/Nascimentos_micro_2000-2022_RS")
 write.csv2(Obitos, "Data/Obitos_micro_2000-2022_RS.csv", row.names = FALSE)
+write.csv2(Nascimentos, "Data/Nascimentos_micro_2000-2022_RS.csv", row.names = FALSE)
 
 ```
 
