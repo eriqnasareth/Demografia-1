@@ -1,0 +1,69 @@
+---
+title: "Lexis Diagram complete"
+author: "Erick Nasareth"
+date: "2025-04-25"
+output: html_document
+---
+
+# Carregando pacotes
+
+```{r message=FALSE}
+if (!require(microdatasus)) remotes::install_github("rfsaldanha/microdatasus")
+if (!require(read.dbc)) install.packages("read.dbc", repos ="https://packagemanager.posit.co/cran/2024-07-05")
+
+```
+
+# Carregando pacotes necessários
+
+```{r message=FALSE}
+if (!require(pacman)) install.packages("pacman")
+pacman::p_load("tidyverse", "readxl", "LexisPlotR", "stringr", "ggthemes", "microdatasus", "writexl")
+
+```
+
+# Dados do datasus
+
+```{r message=FALSE, waning=FALSE}
+dados_obitos <- fetch_datasus(year_start = 2000, year_end = 2022, uf = "RS", information_system = "SIM-DO")
+
+```
+
+
+```{r}
+dados_obitos <- process_sim(dados_obitos)
+```
+
+
+```{r message=FALSE, waning=FALSE}
+dados_nascimentos <- fetch_datasus(year_start = 2000, year_end = 2022, uf = "RS", information_system = "SINASC")
+```
+
+```{r}
+dados_nascimento <- process_sinasc(dados_nascimentos)
+```
+
+
+
+# Organizando as planilhas:
+
+```{r}
+Obitos <- dados_obitos %>%
+  select(DTNASC, DTOBITO, IDADE, SEXO)
+
+Nascimentos <- dados_nascimentos %>%
+  select(DTNASC, SEXO)
+```
+
+
+```{r}
+
+writexl::write_xlsx(Obitos, "Data/Obitos_micro_2000-2022_RS.xlsx")
+writexl::write_xlsx(Nascimentos, "Data/Nascimentos_micro_2000-2022_RS")
+write.csv2(Obitos, "Data/Obitos_micro_2000-2022_RS.csv", row.names = FALSE)
+
+```
+
+
+
+
+
