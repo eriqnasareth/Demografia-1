@@ -1,0 +1,289 @@
+---
+title: "Lexis Diagram - Project 1 Demography UnB"
+author: "Erick Nasareth"
+date: "2025-04-22"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+# Pacotes necessários
+
+```{r waning=F}
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load("tidyverse", "readxl", "LexisPlotR", "stringr", "ggthemes")
+```
+
+# Carregando tabelas do SIM e do SINASC
+
+```{r}
+death <- read.csv("Data/SIM_2000-2023_RS.csv", sep = ";")
+birth <- read.csv("Data/sinasc_2000-2023_RS.csv", sep = ";")
+```
+
+# Selecionando somente as colunas e linhas que serão utilizadas de cada banco
+
+```{r}
+birth <- birth %>%
+  select(Ano.do.nascimento, Total)
+
+death <- death %>%
+  select(Ano.do.Obito, Total)
+
+death <- death[1:24, ]
+```
+
+
+# Lexis diagram com intervalo
+
+## Criando os grupos delimitando os limites
+
+
+```{r}
+
+intervalos <- rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 5)
+intervalos <- intervalos[1:(length(intervalos) - 1)]
+
+birth[,"Intervalos"] <- intervalos
+death[,"Intervalos"] <- intervalos
+
+
+```
+
+
+```{r}
+Nascidos5 <- birth %>%
+  select(Total, Intervalos) %>%
+  group_by(Intervalos) %>%
+  summarise(Nascidos = sum(Total))
+
+Obitos5 <- death %>%
+  select(Total, Intervalos) %>%
+  group_by(Intervalos) %>%
+  summarise(Obitos = sum(Total))
+
+```
+
+
+
+## Criando Poligonos
+
+### Delimitando os limites das coordenadas x, y e criando os grupos.
+
+```{r}
+
+coordenadas <- rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 4)
+coordenadas <- coordenadas[3:length(coordenadas)]
+coordenadas <- c(coordenadas, c(rep(as.Date("2024-01-01"), each = 2)))
+
+grupo = as.character(rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "5 year"), each = 4))
+coordx = coordenadas
+coordy = rep(c(0, 5, 5, 0), length(unique(grupo)))
+
+
+```
+
+
+```{r}
+polygons <- data.frame(group = grupo,
+                       x= coordx,
+                       y= coordy
+                             )
+
+
+  
+```
+
+## Diagrama de lexis
+
+```{r}
+
+lexis_grid(year_start = 2000, year_end = 2025, age_start = 0, age_end = 10, delta = 5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_polygon(aes(      # Polígonos para 1 a 4 anos     
+    x     = polygons$x,
+    y     = polygons$y,
+    group = polygons$group,
+    fill  = polygons$group
+  ),
+  alpha= 0.3) +
+  annotate(
+    "text",
+    x     = seq(from = as.Date("2003-01-01"), to = as.Date("2025-01-01"), by = "5 year"),
+    y     = 3,
+    label = Obitos5$Obitos, # Respostas da questão
+    size  = 5,
+    color = "red"
+  )   +
+  annotate(              # Anotações nos gráficos
+    "text",
+    x     = seq(from = as.Date("2002-06-01"), to = as.Date("2025-01-01"), by = "5 year"),
+    y     = 0.5,
+    label = Nascidos5$Nascidos,     # Respostas da questão
+    size  = 5
+  ) +
+  labs(title = "Nascidos vivos, óbitos em menores de 5 anos quinquenalmente de 2000 a 2023", y = "Idade", x = "Anos por intervalo quinquenal") +
+  theme(legend.position = 'none') +
+  scale_fill_colorblind()  
+
+
+
+```
+
+
+# Lexis diagram por ano
+
+
+eixos x, y e grupo do poligono
+ x: 4 de cada ano, mas só 2 do primeiro e 2 do ultimo
+ y: 0, 5, 5, 0
+ grupo: 4 vezes cada um dos anos utilizados
+ 
+criar gráfico
+
+
+## Ajustes das variaveis que serao reutilizadas
+
+```{r}
+
+birth <- birth %>%
+  select(Ano.do.nascimento, Total)
+
+death <- death %>%
+  select(Ano.do.Obito, Total)
+
+```
+
+
+## Poligonos
+
+```{r}
+
+# A ideia do poligono com coordenadas (x, y), é que forme um retangulo começando com o x parado duas vezes na mesma coordenada enquanto o y sobe da primeira idade observada até a ultima, nesse caso de 0-5, depois o y mantem enquanto o x movimenta do primeiro dia do ano até o ultimo depois o y desce para completar o retangulo. :)
+
+coordx <- rep(seq(from = as.Date("2000-01-01"), to = as.Date("2024-01-01"), by = "year"), each = 4)
+
+# Sempre elimino os 2 primeiro e os dois últimos anos, porque utilizo 2 anos para completar o final do retângulo do ano anterior e 2 anos para começar o próximo, como não tem retângulo anterior para o primeiro ano registrado e próximo retângulo para o último, então não preciso desses anos.
+
+coordx <- coordx[3:(length(coordx)-2)]
+
+grupo <- as.character(
+  rep( seq(from = as.Date("2000-01-01"), to = as.Date("2023-01-01"), by = "year") ,each = 4)
+)
+
+coordy <- rep(c(0, 5, 5, 0)  , length(unique(grupo)))
+
+```
+
+
+```{r}
+poligono <- data.frame(
+  x = coordx,
+  y = coordy,
+  group = grupo
+  
+)
+```
+
+## Diagrama de Lexis por ano
+
+```{r}
+lexis_grid(year_start = 2000, year_end = 2024, age_start = 0, age_end = 6) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_polygon(aes(      # Polígonos para 1 a 4 anos     
+    x     = poligono$x,
+    y     = poligono$y,
+    group = poligono$group,
+    fill  = poligono$group
+  ),
+  alpha= 0.2) +
+  annotate(
+    "text",
+    x     = seq(from = as.Date("2000-06-01"), to = as.Date("2023-06-01"), by = "year"),
+    y     = 3,
+    label = death$Total,
+    angle = 90,
+    size  = 3,
+    color = "red"
+  )   +
+  annotate(              # Anotações nos gráficos
+    "text",
+    x     = seq(from = as.Date("2000-06-01"), to = as.Date("2023-06-01"), by = "year"),
+    y     = 0.5,
+    angle = 90,
+    label = birth$Total,
+    size  = 3
+  ) +
+  labs(title = "Nascidos vivos, óbitos em menores de 5 anos por ano de 2000 a 2023", y = "Idade", x = "Ano") +
+  theme(legend.position = 'none')  
+```
+
+
+# tentativa de melhorar o grafico sem intervalos de idade
+
+```{r}
+lexis_grid(year_start = 2000, year_end = 2012, age_start = 0, age_end = 6) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_polygon(aes(      # Polígonos para 1 a 4 anos     
+    x     = poligono$x[1:48],
+    y     = poligono$y[1:48],
+    group = poligono$group[1:48],
+    fill  = poligono$group[1:48]
+  ),
+  alpha= 0.2) +
+  annotate(
+    "text",
+    x     = seq(from = as.Date("2000-06-01"), to = as.Date("2011-06-01"), by = "year"),
+    y     = 3,
+    label = death$Total[1:12],
+    angle = 90,
+    size  = 5,
+    color = "red"
+  )   +
+  annotate(              # Anotações nos gráficos
+    "text",
+    x     = seq(from = as.Date("2000-07-01"), to = as.Date("2011-07-01"), by = "year"),
+    y     = 0.1,
+    label = birth$Total[1:12],
+    size  = 3
+  ) +
+  labs(title = "Nascidos vivos, óbitos em menores de 5 anos por ano de 2000 a 2011", y = "Idade", x = "Ano") +
+  theme(legend.position = 'none')  
+```
+
+
+
+```{r}
+lexis_grid(year_start = 2012, year_end = 2024, age_start = 0, age_end = 6) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_polygon(aes(      # Polígonos para 1 a 4 anos     
+    x     = poligono$x[48:length(poligono$x)],
+    y     = poligono$y[48:length(poligono$x)],
+    group = poligono$group[48:length(poligono$x)],
+    fill  = poligono$group[48:length(poligono$x)]
+  ),
+  alpha= 0.2) +
+  annotate(
+    "text",
+    x     = seq(from = as.Date("2012-06-01"), to = as.Date("2023-06-01"), by = "year"),
+    y     = 3,
+    label = death$Total[13:length(death$Total)],
+    angle = 90,
+    size  = 5,
+    color = "red"
+  )   +
+  annotate(              # Anotações nos gráficos
+    "text",
+    x     = seq(from = as.Date("2012-07-01"), to = as.Date("2023-07-01"), by = "year"),
+    y     = 0.1,
+    label = birth$Total[13:length(death$Total)],
+    size  = 3
+  ) +
+  labs(title = "Nascidos vivos, óbitos em menores de 5 anos por ano de 2012 a 20023", y = "Idade", x = "Ano") +
+  theme(legend.position = 'none')  
+```
+
+
+
