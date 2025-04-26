@@ -1,0 +1,101 @@
+---
+title: "FInal Lexis Diagram"
+author: "Erick Nasareth"
+date: "2025-04-25"
+output: html_document
+---
+
+# Bibliotecas
+
+```{r waning=F}
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load("tidyverse", "readxl", "LexisPlotR", "stringr", "ggthemes", "knitr", "lubridate")
+```
+
+# Bancos de dados
+
+```{r}
+sim <- read.csv2("Data/Obitos_micro_2000-2022_RS.csv")
+sinasc <- read.csv2("Data/Nascimentos_micro_2000-2022_RS.csv")
+```
+
+Função do Gabriel
+
+```{r echo=TRUE}
+sim_idade <- function(x) {
+  # Funçao para idade
+  if (str_sub(x, 1, 1) < 4) {
+    x = 0
+  } else if (str_sub(x, 1, 1) == 4) {
+    x =  0 + as.numeric(str_sub(x, 2))
+  }
+  else if (str_sub(x, 1, 1) == 5) {
+    x = 100 + as.numeric(str_sub(x, 2))
+  }
+  else{
+    x = NA
+  }
+  return(x)
+}
+```
+
+
+# Limpeza dos dados
+
+## Dados do SIM
+
+Retirando todos os NA'S
+```{r}
+sim_na <- nrow(sim[is.na(sim$DTNASC), ])
+
+kable(sim_na, col.names = "Quantidade de pessoas sem data de nascimento excluídas da análise")
+```
+
+Ajustando os tipos das variavéis utilizadas
+
+```{r}
+sim <- sim %>%
+  mutate(DTNASC = as.Date(DTNASC), DTOBITO = as.Date(DTOBITO), IDADE = as.character(IDADE))
+```
+
+
+Transformado a idade em anos
+
+```{r}
+sim <- sim[!is.na(sim$DTNASC), ]
+sim <- sim[!is.na(sim$IDADE), ]
+
+```
+
+
+```{r}
+sim$IDADE <- sapply(sim$IDADE, sim_idade)
+```
+
+```{r}
+sim <- sim %>%
+  filter(IDADE < 5)
+```
+
+
+## Dados do SINASC
+
+```{r}
+sinasc$DTNASC <- dmy(sinasc$DTNASC)
+sinasc$DTNASC <- year(sinasc$DTNASC)
+```
+
+#
+
+```{r}
+nascidos_por_ano <- sinasc %>%
+  group_by(DTNASC) %>%
+  
+```
+
+
+
+
+
+
+
