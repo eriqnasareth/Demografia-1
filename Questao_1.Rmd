@@ -88,14 +88,24 @@ sinasc$DTNASC <- year(sinasc$DTNASC)
 #
 
 ```{r}
+
+#dividido por mil
 nascidos_por_ano <- sinasc %>%
   group_by(DTNASC) %>%
-  
+  summarise(soma = floor(sum(DTNASC)/1000))
+
+
 ```
 
 
 
 
+# Lexis diagram
+
+```{r}
+lexis_grid(year_start = 2000, year_end = 2025, age_start = 0, age_end = 10, delta = 5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
 
 
 
